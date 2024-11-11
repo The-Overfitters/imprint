@@ -1,4 +1,4 @@
-settings.py
+vars.py
 yolo/weights/*
 
 # Byte-compiled / optimized / DLL files

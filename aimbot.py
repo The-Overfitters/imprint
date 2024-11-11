@@ -42,10 +42,11 @@ class Aimbot():
     def reset(self):
         if not self.TOGGLE:
             return
-        self.shooting = False
 
-        if self.mouse_control:
+        if self.mouse_control and self.shooting:
             self.mouse.release(Button.left)
+        
+        self.shooting = False
 
     def run(self):
         bbox_queue = mp.Queue()
@@ -92,7 +93,7 @@ class Aimbot():
 
         camera = dxcam.create(output_idx=0)
         
-        print('[Aimbot]  Starting inference loop...')
+        print('[Aimbot] Starting inference loop...')
         while True:
             start_time = time.time()  # Record the start time for FPS control
             
@@ -122,7 +123,7 @@ class Aimbot():
 
             # Sleep to maintain target FPS for inference
             elapsed_time = time.time() - start_time
-            sleep_time = max(0, 1/10 - elapsed_time)
+            sleep_time = max(0, 1/1000 - elapsed_time)
             time.sleep(sleep_time)
 
 
