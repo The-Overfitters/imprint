@@ -1,11 +1,11 @@
 import dxcam
 import time
+from yolo.models.common import AutoShape, DetectMultiBackend
 from pynput.mouse import Button, Controller
 from pynput import mouse
 import cv2
 import multiprocessing as mp
 import warnings
-import torch
 import os
 
 def bbox_from_xyxy(xyxy):
@@ -15,9 +15,12 @@ def point_in_bbox(point, bbox):
     return (bbox[0] <= point[0] <= bbox[2]) and (bbox[1] <= point[1] <= bbox[3])
 
 class Aimbot():
-    def __init__(self):
-        self.TOGGLE = False # For some reason button gets toggled so if we want to start on this should be False???
+    def __init__(self, model_name):
+        self.model_name = model_name
+
+        self.TOGGLE = False
         self.shooting = False
+
         print('[Aimbot] Init complete.')
 
     def on_click(self, x, y, button, pressed):
@@ -48,7 +51,7 @@ class Aimbot():
         self.mouse_buttons = {}
 
         inference_thread = mp.Process(target=self.inference_loop,
-                                            args=[bbox_queue, reset_flag])
+                                            args=[bbox_queue, reset_flag, self.model_name])
         bbox_check_thread = mp.Process(target=self.check_bbox_points,
                                             args=[bbox_queue, shoot_flag, self.mouse])
 
@@ -75,10 +78,10 @@ class Aimbot():
             print("\nCtrl+C detected. Force quitting the program...")
             os._exit(1)  # Immediately terminate the program without any graceful shutdown
 
-    def inference_loop(self, bbox_queue, callback_flag):
+    def inference_loop(self, bbox_queue, callback_flag, model_name):
         # self not synced across processes
         #model = torch.hub.load('./yolo', 'custom', path='./yolo/weights/aimbot.pt', source='local', device=0 if torch.cuda.is_available() else 'cpu')
-        model = torch.hub.load('./yolo', 'custom', path='./yolo/weights/aimbot.pt', source='local', device='cpu')
+        model = AutoShape(DetectMultiBackend(model_name, device='cpu'))
         model.eval()
 
         warnings.simplefilter(action='ignore', category=FutureWarning)
