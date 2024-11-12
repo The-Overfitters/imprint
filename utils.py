@@ -1,6 +1,12 @@
 import os
 import requests
 
+def bbox_from_xyxy(xyxy):
+    return [int(xyxy['xmin']), int(xyxy['ymin']), int(xyxy['xmax']), int(xyxy['ymax'])]
+
+def point_in_bbox(point, bbox):
+    return (bbox[0] <= point[0] <= bbox[2]) and (bbox[1] <= point[1] <= bbox[3])
+
 def download_file(url, directory, filename):
     # Ensure the directory exists
     os.makedirs(directory, exist_ok=True)
