@@ -1,6 +1,4 @@
-import ctypes, time
-
-time.sleep(2)
+import ctypes
 
 PUL = ctypes.POINTER(ctypes.c_ulong)
 
