@@ -1,6 +1,31 @@
 import os
 import requests
 
+class Point():
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+    
+    def __add__(self, a):
+        if isinstance(a, Point):
+            return Point(self.x + a.x, self.y + a.y)
+        else:
+            return Point(self.x + a, self.y + a)
+        
+    def __sub__(self, a):
+        if isinstance(a, Point):
+            return Point(self.x - a.x, self.y - a.y)
+        else:
+            return Point(self.x - a, self.y - a)
+
+class Box():
+    def __init__ (self, x1, y1, x2, y2):
+        return self.__init__(Point(x1, y1), Point(x2, y2))
+
+    def __init__(self, p1: Point, p2: Point):
+        self.p1, self.p2 = p1, p2
+        self.width, self.height = self.p2.x - self.p1.x, self.p2.y - self.p1.y
+        self.midpoint = Point(self.p1 + Point(self.width//2, self.height//2))
+
 def bbox_from_xyxy(xyxy):
     return [int(xyxy['xmin']), int(xyxy['ymin']), int(xyxy['xmax']), int(xyxy['ymax'])]
 
