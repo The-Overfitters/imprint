@@ -18,29 +18,23 @@ class Aimbot():
     def __init__(self):
         self.TOGGLE = False # For some reason button gets toggled so if we want to start on this should be False???
         self.shooting = False
-        self.mouse_control = True
         print('[Aimbot] Init complete.')
 
     def on_click(self, x, y, button, pressed):
         if button == Button.x2 and pressed:
             self.TOGGLE = not self.TOGGLE
             print(f'[Aimbot] Toggled: {self.TOGGLE}')
-        if button == Button.left and pressed and not self.shooting: # User editing or manually shooting
-            self.mouse_control = False
-        if button == Button.left and not pressed  and not self.shooting: # User stopped editing or manually shooting
-            self.mouse_control = True
         self.mouse_buttons[button] = pressed
 
     def shoot(self):
         if not self.TOGGLE:
             return
         
-        if self.mouse_control:
-            self.mouse.press(Button.left)
-            self.shooting = True
+        self.mouse.press(Button.left)
+        self.shooting = True
 
     def reset(self):
-        if self.mouse_control and self.shooting:
+        if self.shooting:
             self.mouse.release(Button.left)
             self.shooting = False
 
@@ -82,6 +76,7 @@ class Aimbot():
             os._exit(1)  # Immediately terminate the program without any graceful shutdown
 
     def inference_loop(self, bbox_queue, callback_flag):
+        # self not synced across processes
         #model = torch.hub.load('./yolo', 'custom', path='./yolo/weights/aimbot.pt', source='local', device=0 if torch.cuda.is_available() else 'cpu')
         model = torch.hub.load('./yolo', 'custom', path='./yolo/weights/aimbot.pt', source='local', device='cpu')
         model.eval()
@@ -116,12 +111,12 @@ class Aimbot():
 
             # Sleep to maintain target FPS for inference
             elapsed_time = time.time() - start_time
-            print(elapsed_time)
             sleep_time = max(0, 1/10 - elapsed_time)
             time.sleep(sleep_time)
 
 
     def check_bbox_points(self, bbox_queue, callback_flag, mouse):
+        # self not synced across processes
         inference_mouse_pos = mouse.position
         shooting = False
         boxes = []

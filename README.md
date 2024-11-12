@@ -49,7 +49,7 @@ python main.py
 ```
 
 ### Controls
-- **Toggle**: The aimbot can be toggled on and off by pressing the side button (`Button.x2`) on your mouse.
+- **Toggle**: The aimbot can be toggled on and off by pressing the front side button (`Button.x2`) on your mouse. This *can* be changed by editing `aimbot.py`
 - **Manual Control**: You can manually shoot by pressing the left mouse button if you need to take control.
 
 ## File Overview
