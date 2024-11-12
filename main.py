@@ -6,5 +6,5 @@ if __name__ == '__main__':
     download_file(DOWNLOAD_URL, 'yolo/weights', 'aimbot.pt')
     aimbot = Aimbot()
 
-    print('Running aimbot...')
+    print('[main] Running aimbot...')
     aimbot.run()

@@ -34,19 +34,15 @@ class Aimbot():
     def shoot(self):
         if not self.TOGGLE:
             return
-        self.shooting = True
-
+        
         if self.mouse_control:
             self.mouse.press(Button.left)
+            self.shooting = True
 
     def reset(self):
-        if not self.TOGGLE:
-            return
-
         if self.mouse_control and self.shooting:
             self.mouse.release(Button.left)
-        
-        self.shooting = False
+            self.shooting = False
 
     def run(self):
         bbox_queue = mp.Queue()
@@ -86,7 +82,8 @@ class Aimbot():
             os._exit(1)  # Immediately terminate the program without any graceful shutdown
 
     def inference_loop(self, bbox_queue, callback_flag):
-        model = torch.hub.load('./yolo', 'custom', path='./yolo/weights/aimbot.pt', source='local', device=0 if torch.cuda.is_available() else 'cpu')
+        #model = torch.hub.load('./yolo', 'custom', path='./yolo/weights/aimbot.pt', source='local', device=0 if torch.cuda.is_available() else 'cpu')
+        model = torch.hub.load('./yolo', 'custom', path='./yolo/weights/aimbot.pt', source='local', device='cpu')
         model.eval()
 
         warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -113,17 +110,14 @@ class Aimbot():
 
             boxes = [bbox_from_xyxy(row) for _, row in predictions.iterrows()]
             
-            # Clear the queue before adding the latest bounding box
-            # while not bbox_queue.empty():
-            #     bbox_queue.get()
 
             bbox_queue.put(boxes)  # Add the latest bounding box
-            # inference_flag.clear() # Cleared whenever we make a new inference, but also ignore original value so other code can set true
             callback_flag.set()
 
             # Sleep to maintain target FPS for inference
             elapsed_time = time.time() - start_time
-            sleep_time = max(0, 1/1000 - elapsed_time)
+            print(elapsed_time)
+            sleep_time = max(0, 1/10 - elapsed_time)
             time.sleep(sleep_time)
 
 

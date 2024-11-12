@@ -36,8 +36,7 @@ Ensure you have the YOLO weights file, `aimbot.pt`, saved in the `yolo/weights` 
 
 ## Setup
 
-1. Verify the path to your YOLO weights model in `main.py`:
-   - By default, the model is expected to be downloaded from a URL specified in the `settings.py` file. Update this if necessary.
+1. Create `vars.py` and add a DOWNLOAD_URL variable equal to your download link
    
 2. Configure any additional parameters in `aimbot.py` as needed.
 
