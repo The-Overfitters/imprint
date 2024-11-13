@@ -22,12 +22,8 @@ class Aimbot():
     def run(self):
         bbox_queue = mp.Queue()
         gui_queue = mp.Queue()
-        
-        shoot_flag = mp.Event() # Set when cursor on enemy
-        reset_flag = mp.Event() # Set when new inference
 
         self.mouse = Controller()
-        self.mouse_buttons = {}
         
 
         # TODO: Inter-process communication so that tracker does shoot and reset, and reset_flag is passed directly from inference_thread
@@ -46,9 +42,5 @@ class Aimbot():
         app.exec_() # Blocking, everything hangs after this
 
         # Main thread program to handle Ctrl+C and force quit
-        try:
-            while True:
-                time.sleep(0.01)
-        except KeyboardInterrupt:
-            print("\nCtrl+C detected. Force quitting the program...")
-            os._exit(1)  # Immediately terminate the program without any graceful shutdown
+        print("\nCtrl+C detected. Force quitting the program...")
+        os._exit(1)  # Immediately terminate the program without any graceful shutdown

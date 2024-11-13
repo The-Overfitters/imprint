@@ -30,6 +30,7 @@ class Inference():
             
         frame = self.camera.grab()
         if frame is None:
+            print('None')
             return
         frame = cv2.cvtColor(cv2.resize(frame, (640,640)), cv2.COLOR_BGR2RGB)
         

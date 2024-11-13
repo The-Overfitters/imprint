@@ -42,9 +42,9 @@ class AimbotGUI(QMainWindow):
 
         # Make sure we can actually control+c the stupid thing, and so main thread is not blocked - in the future it should be fine because ideally no work gets done here
         signal.signal(signal.SIGINT, handle_sigint)
-        timer = QTimer()
-        timer.timeout.connect(self.checkGUIUpdates)  # No-op to keep the event loop active
-        timer.start(16) # ms, make this fast (potentially faster), screw the gui no one cares
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.checkGUIUpdates)  # No-op to keep the event loop active
+        self.timer.start(16) # ms, make this fast (potentially faster), screw the gui no one cares
 
         # Make the window truly click-through on Windows
         if is_windows:
@@ -58,6 +58,7 @@ class AimbotGUI(QMainWindow):
                 self.repaint()
         except KeyboardInterrupt:
             print("\nCtrl+C detected. Force quitting the program...")
+            QApplication.quit()
             os._exit(1)  # Immediately terminate the program without any graceful shutdown
 
     def paintEvent(self, event):
@@ -69,17 +70,19 @@ class AimbotGUI(QMainWindow):
         painter.drawRect(QRect(200, 200, 500, 500))
         
         while not self.gui_queue.empty():
-            packet: GUIInfoPacket = self.bbox_queue.get_nowait()
+            packet: GUIInfoPacket = self.gui_queue.get_nowait()
             
             if (packet.type == GUIInfoType.ONION):
-                print('PACKET')
                 onions: list[Onion] = packet.data
+                
                 pen = QPen(QColor(255, 0, 0, 255), 2)
                 painter.setBrush(Qt.NoBrush)
                 painter.setPen(pen)
                 for onion in onions:
                     for i, box in enumerate(onion.boxes):
+                        if box == None:
+                            continue
                         transparency = int((onion.size - i)/onion.size * 255)
                         pen.setColor(QColor(255, 0, 0, transparency))
-                        painter.drawRect(QRect(box.p1.x*1920/600, box.p2.y*1080/600, box.width*1920/600, box.height*1080/600))
+                        painter.drawRect(QRect(box.p1.x*1920/640, box.p1.y*1080/640, box.width*1920/640, box.height*1080/640))
         

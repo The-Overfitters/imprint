@@ -1,5 +1,6 @@
 import time
 from pynput.mouse import Button
+from pynput import mouse
 from utils import Box, Onion, Point
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
@@ -13,6 +14,7 @@ class Tracker():
         self.TOGGLE = False
 
         self.inference_mouse_pos = self.mouse.position
+        self.mouse_buttons = {}
         self.shooting = False
         self.boxes: list[Box] = []
         self.onions: list[Onion] = []
@@ -38,22 +40,26 @@ class Tracker():
     def run(self):
         print('[Aimbot] Starting bbox loop...')
 
-        mouse_thread = self.mouse.Listener(
+        mouse_thread = mouse.Listener(
             on_click = lambda x, y, button, pressed: self.on_click(x, y, button, pressed)
         )
         mouse_thread.start()
 
         while True:
             self.check_bbox_points()
+            
             self.gui_queue.put(GUIInfoPacket(GUIInfoType.ONION, self.onions))
 
     def check_bbox_points(self):
         start_time = time.time()  # Record the start time for FPS control
 
+        reset_run = False
+
         # TODO: Figure out what happens if there is more than one bbox in queue
         if not self.bbox_queue.empty(): # Just got new inference, reset shooting
             self.boxes = [Box.from_list(i) for i in self.bbox_queue.get_nowait()]
             self.inference_mouse_pos = self.mouse.position
+            reset_run = True
             self.reset()
         
         # There has not been a new bounding box drawn, so we should still keep shooting
@@ -63,29 +69,33 @@ class Tracker():
         
         mouse_delta = [(self.mouse.position[0] - self.inference_mouse_pos[0])*640/1920,
                         -(self.mouse.position[1] - self.inference_mouse_pos[1])*640/1080]
+        
+        used_onion_idx = []
         for box in self.boxes:
-            # Determine which onion to add to
-            val, idx = 1000000, None
-            for i in range(len(self.onions)):
-                self.onions[i].expiry += 1
-                similarity = self.onions[i].similarity(box)
+            box.p1 -= Point(mouse_delta[0], mouse_delta[1])
+            box.p2 -= Point(mouse_delta[0], mouse_delta[1])
 
-                if similarity < val:
-                    val, i = similarity, i
+            if reset_run: # Determine which onion to add to
+                val, idx = 1000000, None
+                for i in range(len(self.onions)):
+                    similarity = self.onions[i].similarity(box)
 
-            if val > 10000 or idx == None: # Tweak value, check for if we should make new onion or add
-                onion = Onion()
-                onion.add(box)
-                self.onions.append(onion)
-            else:
-                self.onions[idx].add(box)
-                self.onions[idx].expiry = 0
-            
-            self.onions = [i for i in self.onions if not i.expiry > 20] # Remove all onions that haven't recieved an inference in a while
+                    if similarity < val:
+                        val, idx = similarity, i
+                
+                if val > 120 or idx == None: # Tweak value, check for if we should make new onion or add
+                    onion = Onion()
+                    onion.add(box)
+                    self.onions.append(onion)
+                    used_onion_idx.append(len(self.onions)-1)
+                else:
+                    self.onions[idx].add(box)
+                    used_onion_idx.append(idx)
 
-            if box.point_inside(Point(320 + mouse_delta[0], 320 + mouse_delta[1])):
+            if box.point_inside(Point(320, 320)):
                 self.shoot()
-                return
+                break
+        self.onions = [self.onions[i] for i in set(used_onion_idx)] # Remove all onions that haven't recieved an  in a while
 
         elapsed_time = time.time() - start_time
         sleep_time = max(0, 1/60 - elapsed_time)

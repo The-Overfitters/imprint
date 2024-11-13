@@ -42,7 +42,6 @@ class Onion:
     def __init__(self):
         self.size = 10
         self.boxes = [None] * self.size
-        self.expiry = 0
 
     def similarity(self, new: Box):
         eval = 0
@@ -52,7 +51,7 @@ class Onion:
 
         for i in range(self.size):
             if self.boxes[i] == None:
-                break
+                continue
             
             box: Box = self.boxes[i]
             weight = 1 - (i/self.size)**2
