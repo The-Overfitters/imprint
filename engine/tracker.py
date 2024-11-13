@@ -2,10 +2,7 @@ import time
 from pynput.mouse import Button
 from pynput import mouse
 from utils import Box, Onion, Point
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QTimer
-from gui import AimbotGUI
-from gui import GUIInfoPacket, GUIInfoType
+from gui.gui import GUIInfoPacket, GUIInfoType
 
 class Tracker():
     def __init__(self, bbox_queue, gui_queue, mouse):
@@ -24,6 +21,7 @@ class Tracker():
     def on_click(self, x, y, button, pressed):
         if button == Button.x2 and pressed:
             self.TOGGLE = not self.TOGGLE
+            self.gui_queue.put(GUIInfoPacket(GUIInfoType.TEXT, {'type': 'toggle', 'text': str(self.TOGGLE)}))
             print(f'[Aimbot] Toggled: {self.TOGGLE}')
         self.mouse_buttons[button] = pressed
     def shoot(self):
@@ -47,7 +45,6 @@ class Tracker():
 
         while True:
             self.check_bbox_points()
-            
             self.gui_queue.put(GUIInfoPacket(GUIInfoType.ONION, self.onions))
 
     def check_bbox_points(self):
@@ -67,8 +64,9 @@ class Tracker():
             self.shoot()
             return
         
-        mouse_delta = [(self.mouse.position[0] - self.inference_mouse_pos[0])*640/1920,
-                        -(self.mouse.position[1] - self.inference_mouse_pos[1])*640/1080]
+        SENSITIVITY = 0.07 # Set to in-game sens
+        mouse_delta = [(self.mouse.position[0] - self.inference_mouse_pos[0]) * SENSITIVITY, # Not true delta because we dampen it with sensitivity
+                        -(self.mouse.position[1] - self.inference_mouse_pos[1]) * SENSITIVITY]
         
         used_onion_idx = []
         for box in self.boxes:
@@ -83,7 +81,7 @@ class Tracker():
                     if similarity < val:
                         val, idx = similarity, i
                 
-                if val > 120 or idx == None: # Tweak value, check for if we should make new onion or add
+                if val > 100 or idx == None: # Tweak value, check for if we should make new onion or add
                     onion = Onion()
                     onion.add(box)
                     self.onions.append(onion)
@@ -92,11 +90,18 @@ class Tracker():
                     self.onions[idx].add(box)
                     used_onion_idx.append(idx)
 
-            if box.point_inside(Point(320, 320)):
-                self.shoot()
-                break
-        self.onions = [self.onions[i] for i in set(used_onion_idx)] # Remove all onions that haven't recieved an  in a while
-
+            # Shoot if hovering on real box or prediction
+            valid_boxes = [box]
+            if len(used_onion_idx) > 0:
+                valid_boxes.extend(self.onions[used_onion_idx[-1]].predictions)
+            for b in valid_boxes:
+                if b.point_inside(Point(320, 320)):
+                    self.shoot()
+                    break
+        
+        if reset_run: # Remove all onions that haven't recieved an inference
+            self.onions = [self.onions[i] for i in set(used_onion_idx)]
+        
         elapsed_time = time.time() - start_time
         sleep_time = max(0, 1/60 - elapsed_time)
         time.sleep(sleep_time)

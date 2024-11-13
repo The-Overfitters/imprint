@@ -4,6 +4,11 @@ import time
 import cv2
 import torch
 
+import win32gui
+import win32ui
+import win32con
+import win32clipboard
+
 import utils
 from yolo.models.common import AutoShape, DetectMultiBackend
 
@@ -25,12 +30,35 @@ class Inference():
         while True:
             self.inference_loop()
 
+    # def capture(self):
+    #     # Replace with the exact title of your application window
+    #     win_name = "OBS - File Explorer"
+
+    #     # https://stackoverflow.com/questions/48854815/bitmap-from-program-child-window-returns-as-black
+    #     hWnd = win32gui.FindWindow(None, win_name)
+    #     print(hWnd)
+    #     windowcor = win32gui.GetWindowRect(hWnd)
+    #     w=windowcor[2]-windowcor[0]
+    #     h=windowcor[3]-windowcor[1]
+    #     hDC=win32gui.GetDC(hWnd)
+    #     memDC=win32gui.CreateCompatibleDC(hDC)
+    #     hbmp = win32gui.CreateCompatibleBitmap(hDC, w, h)
+    #     oldbmp = win32gui.SelectObject(memDC, hbmp)
+
+    #     win32gui.BitBlt(memDC, 0,0,w, h, hDC, 0,0, win32con.SRCCOPY)
+    #     win32gui.SelectObject(memDC, oldbmp)
+
+    #     win32clipboard.OpenClipboard()
+    #     win32clipboard.EmptyClipboard()
+    #     win32clipboard.SetClipboardData(win32con.CF_BITMAP, hbmp.handle)
+    #     win32clipboard.CloseClipboard()
+
     def inference_loop(self):
         start_time = time.time()  # Record the start time for FPS control
             
         frame = self.camera.grab()
+        frame = self.capture()
         if frame is None:
-            print('None')
             return
         frame = cv2.cvtColor(cv2.resize(frame, (640,640)), cv2.COLOR_BGR2RGB)
         

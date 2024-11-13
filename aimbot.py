@@ -1,9 +1,7 @@
-from pynput.mouse import Button, Controller
-from pynput import mouse
+from pynput.mouse import Controller
 import multiprocessing as mp
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QTimer
-from gui import AimbotGUI
+from PyQt6.QtWidgets import QApplication
+from gui.gui import AimbotGUI
 import os
 import time
 import sys
@@ -24,7 +22,6 @@ class Aimbot():
         gui_queue = mp.Queue()
 
         self.mouse = Controller()
-        
 
         # TODO: Inter-process communication so that tracker does shoot and reset, and reset_flag is passed directly from inference_thread
         inference_thread = mp.Process(target=Inference,
@@ -35,11 +32,10 @@ class Aimbot():
         inference_thread.start()
         tracker_thread.start()
         
-        # Hacky GUI fix, temp testing
         app = QApplication(sys.argv)
         overlay = AimbotGUI(gui_queue)
         overlay.show()
-        app.exec_() # Blocking, everything hangs after this
+        app.exec() # Blocking, everything hangs after this
 
         # Main thread program to handle Ctrl+C and force quit
         print("\nCtrl+C detected. Force quitting the program...")
