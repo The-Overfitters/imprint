@@ -73,7 +73,7 @@ class Onion:
         return eval / len([i for i in self.boxes if i is not None]) 
 
     def predict(self):
-        self.predictions = kalman_prediction(self.boxes, n=2)
+        self.predictions = kalman_prediction(self.boxes, n=1)
 
     def add(self, box: Box):
         # Shift elements to the right, dropping the last element

@@ -93,10 +93,11 @@ class AimbotGUI(QMainWindow):
                         painter.drawRect(box_to_screen_qrect(box))
 
                     if onion.predictions[0] != None:
-                        painter.setPen(QPen(QColor(0, 0, 255), 2))
-                        painter.drawRect(box_to_screen_qrect(onion.predictions[0]))
-                        painter.setPen(QPen(QColor(0, 255, 0), 2))
-                        painter.drawRect(box_to_screen_qrect(onion.predictions[1]))
+                        for pred in onion.predictions:
+                            painter.setPen(QPen(QColor(0, 255, 0), 2))
+                            painter.drawRect(box_to_screen_qrect(pred))
+                        # painter.setPen(QPen(QColor(0, 0, 255), 2))
+                        # painter.drawRect(box_to_screen_qrect(onion.predictions[1]))
             
             elif (packet.type == GUIInfoType.TEXT):
                 self.info_data[packet.data['type']] = packet.data['text']
