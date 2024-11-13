@@ -1,18 +1,16 @@
 import time
-import utils
+from pynput.mouse import Button
 from utils import Box, Onion, Point
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
 from gui import AimbotGUI
-import multiprocessing as mp
-import sys
 from gui import GUIInfoPacket, GUIInfoType
 
 class Tracker():
-    def __init__(self, bbox_queue, gui_queue, callback_flag, mouse):
+    def __init__(self, bbox_queue, gui_queue, mouse):
         self.bbox_queue, self.gui_queue = bbox_queue, gui_queue
-        self.callback_flag = callback_flag
         self.mouse = mouse
+        self.TOGGLE = False
 
         self.inference_mouse_pos = self.mouse.position
         self.shooting = False
@@ -21,8 +19,29 @@ class Tracker():
 
         self.run()
 
+    def on_click(self, x, y, button, pressed):
+        if button == Button.x2 and pressed:
+            self.TOGGLE = not self.TOGGLE
+            print(f'[Aimbot] Toggled: {self.TOGGLE}')
+        self.mouse_buttons[button] = pressed
+    def shoot(self):
+        if not self.TOGGLE:
+            return
+        
+        self.mouse.press(Button.left)
+        self.shooting = True
+    def reset(self):
+        if self.shooting:
+            self.mouse.release(Button.left)
+            self.shooting = False
+
     def run(self):
         print('[Aimbot] Starting bbox loop...')
+
+        mouse_thread = self.mouse.Listener(
+            on_click = lambda x, y, button, pressed: self.on_click(x, y, button, pressed)
+        )
+        mouse_thread.start()
 
         while True:
             self.check_bbox_points()
@@ -35,14 +54,12 @@ class Tracker():
         if not self.bbox_queue.empty(): # Just got new inference, reset shooting
             self.boxes = [Box.from_list(i) for i in self.bbox_queue.get_nowait()]
             self.inference_mouse_pos = self.mouse.position
-            self.shooting = False
+            self.reset()
         
         # There has not been a new bounding box drawn, so we should still keep shooting
         if self.shooting:
-            self.callback_flag.set()
+            self.shoot()
             return
-        else:
-            self.callback_flag.clear()
         
         mouse_delta = [(self.mouse.position[0] - self.inference_mouse_pos[0])*640/1920,
                         -(self.mouse.position[1] - self.inference_mouse_pos[1])*640/1080]
@@ -67,8 +84,7 @@ class Tracker():
             self.onions = [i for i in self.onions if not i.expiry > 20] # Remove all onions that haven't recieved an inference in a while
 
             if box.point_inside(Point(320 + mouse_delta[0], 320 + mouse_delta[1])):
-                self.shooting = True
-                self.callback_flag.set()
+                self.shoot()
                 return
 
         elapsed_time = time.time() - start_time

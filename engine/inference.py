@@ -8,9 +8,8 @@ import utils
 from yolo.models.common import AutoShape, DetectMultiBackend
 
 class Inference():
-    def __init__(self, bbox_queue, callback_flag, model_name):
+    def __init__(self, bbox_queue, model_name):
         self.bbox_queue = bbox_queue
-        self.callback_flag = callback_flag
         
         self.model = AutoShape(DetectMultiBackend(model_name, device=torch.device('cpu')))
         self.model.eval()
@@ -46,7 +45,6 @@ class Inference():
         boxes = [utils.bbox_from_xyxy(row) for _, row in predictions.iterrows()]
         
         self.bbox_queue.put(boxes)  # Add the latest bounding box
-        self.callback_flag.set()
 
         # Sleep to maintain target FPS for inference
         elapsed_time = time.time() - start_time

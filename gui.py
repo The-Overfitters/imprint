@@ -4,6 +4,7 @@ from PyQt5.QtGui import QPainter, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QTimer
 from utils import Point, Box, Onion
+import os
 import signal
 import enum
 
@@ -42,14 +43,22 @@ class AimbotGUI(QMainWindow):
         # Make sure we can actually control+c the stupid thing, and so main thread is not blocked - in the future it should be fine because ideally no work gets done here
         signal.signal(signal.SIGINT, handle_sigint)
         timer = QTimer()
-        timer.timeout.connect(lambda: None)  # No-op to keep the event loop active
-        timer.start(100) # ms, make this fast (potentially faster), screw the gui no one cares
+        timer.timeout.connect(self.checkGUIUpdates)  # No-op to keep the event loop active
+        timer.start(16) # ms, make this fast (potentially faster), screw the gui no one cares
 
         # Make the window truly click-through on Windows
         if is_windows:
             hwnd = int(self.winId())
             extended_style = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
             win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, extended_style | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT)
+
+    def checkGUIUpdates(self):
+        try:
+            if not self.gui_queue.empty():
+                self.repaint()
+        except KeyboardInterrupt:
+            print("\nCtrl+C detected. Force quitting the program...")
+            os._exit(1)  # Immediately terminate the program without any graceful shutdown
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -59,8 +68,9 @@ class AimbotGUI(QMainWindow):
         painter.setPen(pen)
         painter.drawRect(QRect(200, 200, 500, 500))
         
-        while not self.gui_queue.empty(): # Just got new inference, reset shooting
+        while not self.gui_queue.empty():
             packet: GUIInfoPacket = self.bbox_queue.get_nowait()
+            
             if (packet.type == GUIInfoType.ONION):
                 print('PACKET')
                 onions: list[Onion] = packet.data

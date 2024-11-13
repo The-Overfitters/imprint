@@ -19,24 +19,6 @@ class Aimbot():
 
         print('[Aimbot] Init complete.')
 
-    def on_click(self, x, y, button, pressed):
-        if button == Button.x2 and pressed:
-            self.TOGGLE = not self.TOGGLE
-            print(f'[Aimbot] Toggled: {self.TOGGLE}')
-        self.mouse_buttons[button] = pressed
-
-    def shoot(self):
-        if not self.TOGGLE:
-            return
-        
-        self.mouse.press(Button.left)
-        self.shooting = True
-
-    def reset(self):
-        if self.shooting:
-            self.mouse.release(Button.left)
-            self.shooting = False
-
     def run(self):
         bbox_queue = mp.Queue()
         gui_queue = mp.Queue()
@@ -50,14 +32,9 @@ class Aimbot():
 
         # TODO: Inter-process communication so that tracker does shoot and reset, and reset_flag is passed directly from inference_thread
         inference_thread = mp.Process(target=Inference,
-                                            args=[bbox_queue, reset_flag, self.model_name])
+                                            args=[bbox_queue, self.model_name])
         tracker_thread = mp.Process(target=Tracker,
-                                            args=[bbox_queue, gui_queue, reset_flag, self.mouse])
-
-        mouse_thread = mouse.Listener(
-            on_click = lambda x, y, button, pressed: self.on_click(x, y, button, pressed)
-        )
-        mouse_thread.start()
+                                            args=[bbox_queue, gui_queue, self.mouse])
 
         inference_thread.start()
         tracker_thread.start()
@@ -66,23 +43,11 @@ class Aimbot():
         app = QApplication(sys.argv)
         overlay = AimbotGUI(gui_queue)
         overlay.show()
-        app.exec_()
-        timer = QTimer()
-        timer.timeout.connect(lambda: None)  # No-op to keep the event loop active
-        timer.start(16) # ms, make this fast (potentially faster), screw the gui no one cares
+        app.exec_() # Blocking, everything hangs after this
 
         # Main thread program to handle Ctrl+C and force quit
         try:
             while True:
-                print('a')
-                # TODO: Move this stuff into processes
-                if shoot_flag.is_set():
-                    shoot_flag.clear()
-                    self.shoot()
-                if reset_flag.is_set():
-                    reset_flag.clear()
-                    self.reset()
-                
                 time.sleep(0.01)
         except KeyboardInterrupt:
             print("\nCtrl+C detected. Force quitting the program...")
