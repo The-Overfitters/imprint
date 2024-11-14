@@ -28,7 +28,7 @@ cd imprint
 ### 2. Install Required Libraries
 Use `pip` to install the required packages:
 ```bash
-pip install -r requirments.txt
+pip install -r requirements.txt
 ```
 
 ### 3. Download YOLO Weights
