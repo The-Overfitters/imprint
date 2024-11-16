@@ -53,7 +53,7 @@ class Tracker():
         reset_run = False
 
         # TODO: Figure out what happens if there is more than one bbox in queue
-        if not self.bbox_queue.empty(): # Just got new inference, reset shooting
+        while not self.bbox_queue.empty(): # Just got new inference, reset shooting
             self.boxes = [Box.from_list(i) for i in self.bbox_queue.get_nowait()]
             self.inference_mouse_pos = self.mouse.position
             reset_run = True
@@ -90,10 +90,14 @@ class Tracker():
                     self.onions[idx].add(box)
                     used_onion_idx.append(idx)
 
-            # Shoot if hovering on real box or prediction
+            # Shoot if hovering on real box or prediction average
             valid_boxes = [box]
+            
             if len(used_onion_idx) > 0:
-                valid_boxes.extend(self.onions[used_onion_idx[-1]].predictions)
+                onion_predictions = self.onions[used_onion_idx[-1]].predictions
+                moving_average = (onion_predictions[1].midpoint + onion_predictions[2].midpoint) / 2
+                valid_boxes.append(Box.from_midpoint(moving_average, onion_predictions[1].width, onion_predictions[1].height))
+            
             for b in valid_boxes:
                 if b.point_inside(Point(320, 320)):
                     self.shoot()

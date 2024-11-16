@@ -19,6 +19,15 @@ class Point():
             return Point(self.x - a.x, self.y - a.y)
         else:
             return Point(self.x - a, self.y - a)
+    
+    def __truediv__(self, a):
+        return Point(self.x / a, self.y / a)
+    
+    def __mul__(self, a):
+        return Point(self.x * a, self.y * a)
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__, self.__dict__)
 
 class Box():
     @classmethod
@@ -41,8 +50,8 @@ class Box():
     def point_inside(self, point: Point):
         return (self.p1.x <= point.x <= self.p2.x) and (self.p1.y <= point.y <= self.p2.y)
 
-    def __str__(self):
-        return f"Box[({self.p1.x}, {self.p1.y}), ({self.p2.x}, {self.p2.y})]"
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__, self.__dict__)
 
 class Onion:
     def __init__(self):
@@ -73,7 +82,7 @@ class Onion:
         return eval / len([i for i in self.boxes if i is not None]) 
 
     def predict(self):
-        self.predictions = kalman_prediction(self.boxes, n=1)
+        self.predictions = kalman_prediction(self.boxes, n=3)
 
     def add(self, box: Box):
         # Shift elements to the right, dropping the last element
@@ -86,6 +95,9 @@ class Onion:
             return self.boxes[i]
         else:
             raise IndexError("Index out of bounds")
+    
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__, self.__dict__)
 
 def kalman_prediction(boxes: list[Box], n=1) -> Box:
     # Before: [0, n] -> [Newest, Oldest], After: [n, 0] -> [Oldest, Newest, with no None]

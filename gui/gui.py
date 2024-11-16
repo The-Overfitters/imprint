@@ -85,18 +85,16 @@ class AimbotGUI(QMainWindow):
                     boxes = onion.boxes
                     if render_style == 'partial':
                         boxes = [boxes[0]]
-                    for i, box in enumerate(boxes):
-                        if box == None:
-                            continue
-                        transparency = max(0, int((onion.size - i)/float(onion.size) * 255.0))
-                        painter.setPen(QPen(QColor(255, 0, 0, transparency), 2))
-                        painter.drawRect(box_to_screen_qrect(box))
+                    # for i, box in enumerate(boxes):
+                    #     if box == None:
+                    #         continue
+                    #     transparency = max(0, int((onion.size - i)/float(onion.size) * 255.0))
+                    #     painter.setPen(QPen(QColor(255, 0, 0, transparency), 2))
+                    #     painter.drawRect(box_to_screen_qrect(box))
 
                     if onion.predictions[0] != None:
-                        for pred in onion.predictions:
-                            painter.setPen(QPen(QColor(0, 255, 0), 2))
-                            painter.drawRect(box_to_screen_qrect(pred))
-                        # painter.setPen(QPen(QColor(0, 0, 255), 2))
+                        painter.setPen(QPen(QColor(0, 255, 0), 2))
+                        painter.drawRect(box_to_screen_qrect(onion.predictions[2]))
                         # painter.drawRect(box_to_screen_qrect(onion.predictions[1]))
             
             elif (packet.type == GUIInfoType.TEXT):
