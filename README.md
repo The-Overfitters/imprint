@@ -26,6 +26,10 @@ cd imprint
 ```
 
 ### 2. Install Required Libraries
+```bash
+conda create -n imprint python=3.9
+conda activate imprint
+```
 Use `pip` to install the required packages:
 ```bash
 pip install -r requirments.txt
