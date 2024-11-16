@@ -10,12 +10,7 @@ This project is an automated aiming assistant that uses machine learning to dete
 
 ## Requirements
 
-- Python 3.8+
-- Required libraries:
-  - `dxcam`
-  - `pynput`
-  - `opencv-python`
-  - `torch`
+- Python 3.9+
 
 ## Installation
 
@@ -26,10 +21,13 @@ cd imprint
 ```
 
 ### 2. Install Required Libraries
+Use `conda` or another env tool to organize the packages:
 ```bash
 conda create -n imprint python=3.9
 conda activate imprint
 ```
+Install pytorch using pip from here: https://pytorch.org/get-started/locally/
+
 Use `pip` to install the required packages:
 ```bash
 pip install -r requirments.txt
